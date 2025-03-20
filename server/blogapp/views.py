@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth import authenticate, login, logout
 from rest_framework import generics
 from .models import BlogPost, Comment
 from .serializers import BlogPostSerializer, CommentSerializer
@@ -14,8 +15,30 @@ def blog_list(request):
 
 def blog_detail(request, pk):
     post = get_object_or_404(BlogPost, pk=pk)
-    return render(request, 'blog-details.html', {'post': post})
+    if request.method == 'POST':
+        content = request.POST.get('content')
+        if content:
+            Comment.objects.create(
+                post=post,
+                author=request.user if request.user.is_authenticated else None,
+                content=content
+            )
+            return redirect('blog_detail', pk=pk)
+    return render(request, 'blog_detail.html', {'post': post})
 
+def login_view(request):
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            return redirect('blog_list')
+    return render(request, 'login.html')
+
+def logout_view(request):
+    logout(request)
+    return redirect('blog_list')
 
 @login_required
 def blog_create(request):
@@ -28,7 +51,7 @@ def blog_create(request):
             author=request.user
         )
         return redirect('blog_list')
-    return render(request, 'blog/blog_create.html')
+    return render(request, 'blog_create.html')
 
 @login_required
 def blog_update(request, pk):
@@ -40,7 +63,7 @@ def blog_update(request, pk):
         post.content = request.POST.get('content')
         post.save()
         return redirect('blog_list')
-    return render(request, 'blog/blog_update.html', {'post': post})
+    return render(request, 'blog_update.html', {'post': post})
 
 @login_required
 def blog_delete(request, pk):
@@ -49,9 +72,8 @@ def blog_delete(request, pk):
         if request.method == 'POST':
             post.delete()
             return redirect('blog_list')
-    return render(request, 'blog/blog_delete.html', {'post': post})
+    return render(request, 'blog_delete.html', {'post': post})
 
-# API Views
 class BlogPostListCreateAPIView(generics.ListCreateAPIView):
     queryset = BlogPost.objects.all()
     serializer_class = BlogPostSerializer

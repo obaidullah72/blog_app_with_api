@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ post.title }} - BlogSphere</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+            color: #2c3e50;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #34495e;
+            font-size: 2.2em;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #2980b9;
+            padding-bottom: 10px;
+        }
+
+        .blog-meta {
+            color: #7f8c8d;
+            font-size: 0.95em;
+            margin-bottom: 25px;
+            font-style: italic;
+        }
+
+        .blog-content {
+            color: #34495e;
+            line-height: 1.9;
+            font-size: 1.1em;
+            margin-bottom: 30px;
+        }
+
+        .comments-section {
+            margin-top: 40px;
+        }
+
+        .comments-section h2 {
+            color: #2980b9;
+            margin-bottom: 20px;
+        }
+
+        .comment {
+            background: rgba(245, 247, 250, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+        }
+
+        .comment:hover {
+            background: rgba(245, 247, 250, 1);
+        }
+
+        .comment-meta {
+            color: #7f8c8d;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+
+        .comment-form {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        .comment-form label {
+            display: block;
+            color: #34495e;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+
+        .comment-form textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #eee;
+            border-radius: 8px;
+            font-size: 1em;
+            min-height: 100px;
+            resize: vertical;
+            transition: border-color 0.3s;
+        }
+
+        .comment-form textarea:focus {
+            outline: none;
+            border-color: #2980b9;
+        }
+
+        .comment-form button {
+            margin-top: 15px;
+            padding: 10px 25px;
+            background: #2980b9;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .comment-form button:hover {
+            background: #3498db;
+            transform: scale(1.05);
+        }
+
+        .button-group {
+            margin-top: 20px;
+        }
+
+        .edit-btn, .delete-btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            color: white;
+            transition: all 0.3s;
+            display: inline-block;
+        }
+
+        .edit-btn {
+            background: #2980b9;
+            margin-right: 10px;
+        }
+
+        .edit-btn:hover {
+            background: #3498db;
+            transform: scale(1.05);
+        }
+
+        .delete-btn {
+            background: #e74c3c;
+        }
+
+        .delete-btn:hover {
+            background: #c0392b;
+            transform: scale(1.05);
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 30px;
+            color: #2980b9;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .back-link:hover {
+            color: #3498db;
+            transform: translateX(-5px);
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #2980b9;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            max-width: 300px;
+            visibility: hidden;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+            visibility: visible;
+        }
+
+        .loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s;
+        }
+
+        .loader.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #2980b9;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="toast" id="toast"></div>
+    <div class="loader" id="loader">
+        <div class="spinner"></div>
+    </div>
+    <div class="container">
+        <h1>{{ post.title }}</h1>
+        <div class="blog-meta">
+            By {{ post.author }} | {{ post.created_at|date:"F d, Y" }}
+        </div>
+        <div class="blog-content">
+            {{ post.content }}
+        </div>
+
+        {% if user == post.author %}
+            <div class="button-group">
+                <a href="{% url 'blog_update' post.pk %}" class="edit-btn">Edit</a>
+                <a href="{% url 'blog_delete' post.pk %}" class="delete-btn">Delete</a>
+            </div>
+        {% endif %}
+
+        <div class="comments-section">
+            <h2>Comments</h2>
+            {% for comment in post.comments.all %}
+                <div class="comment">
+                    <p>{{ comment.content }}</p>
+                    <div class="comment-meta">
+                        By {{ comment.author|default:"Anonymous" }} on {{ comment.created_at|date:"F d, Y" }}
+                    </div>
+                </div>
+            {% empty %}
+                <p>No comments yet. Be the first to comment!</p>
+            {% endfor %}
+
+            <div class="comment-form">
+                <form method="post" id="comment-form">
+                    {% csrf_token %}
+                    <label for="content">Add a Comment</label>
+                    <textarea name="content" id="content" required placeholder="Write your comment here..."></textarea>
+                    <button type="submit">Post Comment</button>
+                </form>
+            </div>
+        </div>
+
+        <a href="{% url 'blog_list' %}" class="back-link">← Back to BlogSphere</a>
+    </div>
+
+    <script>
+        function showToast(message, duration = 3000) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, duration);
+        }
+
+        function showLoader() {
+            document.getElementById('loader').classList.add('active');
+        }
+
+        function hideLoader() {
+            document.getElementById('loader').classList.remove('active');
+        }
+
+        window.addEventListener('load', () => {
+            showLoader();
+            setTimeout(() => {
+                document.body.style.opacity = '1';
+                document.body.style.transition = 'opacity 0.5s';
+                hideLoader();
+                showToast('Blog post loaded successfully!', 3000);
+            }, 500); 
+        });
+
+        const comments = document.querySelectorAll('.comment');
+        comments.forEach((comment, index) => {
+            comment.style.opacity = '0';
+            setTimeout(() => {
+                comment.style.transition = 'all 0.5s';
+                comment.style.opacity = '1';
+            }, index * 200);
+        });
+
+        const commentForm = document.getElementById('comment-form');
+        commentForm.addEventListener('submit', (e) => {
+            const content = document.getElementById('content').value.trim();
+            if (!content) {
+                e.preventDefault();
+                showToast('Please enter a comment before submitting.', 3000);
+            } else {
+                showLoader();
+                setTimeout(() => {
+                    showToast('Comment added successfully!', 3000);
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                }, 500); 
+            }
+        });
+
+        document.querySelectorAll('.edit-btn, .delete-btn, .back-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                showLoader();
+                setTimeout(() => {
+                    window.location.href = link.getAttribute('href');
+                }, 500);
+            });
+        });
+    </script>
+</body>
+</html>

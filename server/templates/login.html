@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - BlogSphere</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #2980b9 0%, #3498db 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .login-container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 400px;
+            animation: slideUp 0.5s ease;
+        }
+
+        h2 {
+            color: #34495e;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2em;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            color: #7f8c8d;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #eee;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #2980b9;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #2980b9;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #3498db;
+        }
+
+        .error-message {
+            color: #e74c3c;
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #2980b9;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            max-width: 300px;
+            visibility: hidden;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+            visibility: visible;
+        }
+
+        .loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s;
+        }
+
+        .loader.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #2980b9;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="toast" id="toast"></div>
+    <div class="loader" id="loader">
+        <div class="spinner"></div>
+    </div>
+
+    <div class="login-container">
+        <h2>Login to BlogSphere</h2>
+        <form method="post" id="login-form">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" name="username" id="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" name="password" id="password" required>
+            </div>
+            <button type="submit">Login</button>
+            {% if form.errors %}
+                <p class="error-message">Invalid username or password</p>
+            {% endif %}
+        </form>
+    </div>
+
+    <script>
+        function showToast(message, duration = 3000) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, duration);
+        }
+
+        function showLoader() {
+            document.getElementById('loader').classList.add('active');
+        }
+
+        function hideLoader() {
+            document.getElementById('loader').classList.remove('active');
+        }
+
+        window.addEventListener('load', () => {
+            showLoader();
+            setTimeout(() => {
+                document.body.style.opacity = '1';
+                document.body.style.transition = 'opacity 0.5s';
+                hideLoader();
+                showToast('Login page loaded successfully!', 3000);
+                {% if form.errors %}
+                    showToast('Invalid username or password.', 3000);
+                {% endif %}
+            }, 500); 
+        });
+
+        const form = document.getElementById('login-form');
+        form.addEventListener('submit', (e) => {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+
+            if (!username || !password) {
+                e.preventDefault();
+                showToast('Please fill in both username and password fields.', 3000);
+                return;
+            }
+
+            showLoader();
+            setTimeout(() => {
+                showToast('Login successful!', 3000);
+                setTimeout(() => {
+                    window.location.href = "{% url 'blog_list' %}";
+                }, 1000); 
+            }, 500); 
+        });
+    </script>
+</body>
+</html>
